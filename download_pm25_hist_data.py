@@ -27,6 +27,7 @@ for date in df["Dates"]:
         {
             'model': 'ensemble',
             'date': referencedatestring,
+            'area': [51.75, -5.83, 41.67,11.03,],
             'format': 'netcdf',
             'variable': 'particulate_matter_2.5um',
             'level': '0',
