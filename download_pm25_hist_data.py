@@ -15,7 +15,8 @@ dir_cams_api = '/home/ludo915/.cdsapirc'
 df = pd.read_csv("calendar.csv", sep = ";")
 for date in df["Dates"]:
     referencedate = datetime.datetime.strptime(date, '%Y-%m-%d')
-    file_name = 'pm25-{:}.nc'.format(referencedate)
+    referencedatestring = referencedate.strftime("%Y-%m-%d")
+    file_name = 'pm25-{:}.nc'.format(referencedatestring)
 
     with open(dir_cams_api, 'r') as f:
             credentials = yaml.safe_load(f)
@@ -25,7 +26,7 @@ for date in df["Dates"]:
         'cams-europe-air-quality-forecasts',
         {
             'model': 'ensemble',
-            'date': referencedate.strftime("%Y-%m-%d"),
+            'date': referencedatestring,
             'format': 'netcdf',
             'variable': 'particulate_matter_2.5um',
             'level': '0',
