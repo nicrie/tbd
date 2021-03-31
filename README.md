@@ -14,3 +14,7 @@ chmod +x update_data.sh
 ```
 ./update_data.sh
 ```
+## Download Historical Data
+python download_covid_hist_data.py
+python download_pm25_hist_data.py
+python concatenate_all_files_in_dir.py
