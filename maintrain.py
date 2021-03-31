@@ -91,22 +91,36 @@ print('PM2.5 ... ', flush=True, end='')
 #pm25Norm = pm25.where(pm25>10,0).where(pm25<20,1).where(pm25<10, (pm25/10 - 1))
 #pm25 = pm25Norm.where(pm25Norm<1,0)
 covid["pm25"]=0
-dflist =[]
+covid["NO2"]=0
 for index, row in covid.iterrows():
     print(row["date"])
     filename = "pm25-"+row["date"]+".nc"
+    filename2 = "NO2-"+row["date"]+".nc"
     pm25 = xr.open_dataset("data/pm25/" + filename)
+    NO2 = xr.open_dataset("data/NO2/" + filename2)
     print(pm25)
+    print(NO2)
     pm25 = pm25.drop('level').squeeze()
+    NO2 = NO2.drop('level').squeeze()
+    pm25.sortby('longitude')
+    NO2.sortby('longitude')
     pm25 = pm25.sel(time = timedelta(days = 0, hours = 0, minutes = 0))
-    #pm25 = pm25.to_array()
+    NO2 = NO2.sel(time = timedelta(days = 0, hours = 0, minutes = 0))
     pm25.coords['longitude'] = (pm25.coords['longitude'] + 180) % 360 - 180
+    NO2.coords['longitude'] = (NO2.coords['longitude'] + 180) % 360 - 180
     pm25df = pm25.to_dataframe()
     pm25df = pm25df.reset_index()
+    NO2df = NO2.to_dataframe()
+    NO2df = NO2df.reset_index()
     print(pm25df)
+    print(NO2df)
     for index2,row2 in pm25df.iterrows():
         if ((np.round(row2["longitude"],2),np.round(row2["latitude"],2)==(np.round(row["lon"],2),np.round(row["lat"],2)))):
             row["pm25"]=row2["pm2p5_conc"]
+            break
+    for index3,row3 in NO2df.iterrows():
+        if ((np.round(row3["longitude"],2),np.round(row3["latitude"],2)==(np.round(row["lon"],2),np.round(row["lat"],2)))):
+            row["NO2"]=row3["no2_conc"]
             break
 print(covid)
 covid.to_csv("Enriched_Covid_history_data.csv")
