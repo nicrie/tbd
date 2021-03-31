@@ -1,6 +1,7 @@
 import requests
 import pandas as pd
 import datetime
+from tqdm import tqdm
 # departements = pd.read_csv("data/pop/fr/departements-francais.csv", sep = ";")
 # hospi = []
 # url = "https://coronavirusapi-france.now.sh/AllLiveData"
@@ -16,7 +17,7 @@ hospi = []
 url = "https://coronavirusapi-france.now.sh/AllDataByDepartement?Departement="
 
 datapointlist = []
-for nom in departements.NOM:
+for nom in tqdm(departements.NOM):
     url2 = url + nom
     numero = str(departements[departements["NOM"]==nom]["NUMÉRO"].values[0])
     response = requests.get(url2).json()
