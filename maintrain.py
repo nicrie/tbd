@@ -21,27 +21,27 @@ import io
 import imageio
 import glob
 from datetime import timedelta
-def normalize(x):
+
+# =============================================================================
+# Functions
+# =============================================================================
+
+def max_normalize(x):
     return (x - x.min()) / (x.max() - x.min())
+
+# =============================================================================
+# Merge all data
+# =============================================================================
+
 
 # Population
 # -----------------------------------------------------------------------------
   #section| #%%
 print('Population ... ', flush=True, end='')
-#pop1 = pd.read_excel ('data/pop/fr/popfr.xls', sheet_name='2020')
-#pop2 = pd.read_excel ('data/pop/fr/popfr.xls', sheet_name='2021')
-# pop1.columns = ['depnb', 'depname', 'pop']
-# pop2.columns = ['depnb', 'depname', 'pop']
 
-# Population Index
-# Min-Max-normalized values of the log10 transformation
-# pop1['idx']    = normalize(np.log10(pop1['pop']))
-# pop2['idx']    = normalize(np.log10(pop2['pop']))
 pop         = pd.read_csv('./data/pop/fr/pop.csv', usecols=[0,1,2,3,4,5,6,42])
 pop.columns = ['reg', 'dep', 'com', 'article', 'com_nom', 'lon', 'lat', 'total']
-pop.reset_index(inplace = True)
-pop=pop.drop(columns=['index'])
-print(pop)
+pop = pop.reset_index().drop(columns='index')
 popDEPgroupby = pop.groupby("dep")
 popDEP = pop.copy().groupby('dep').median()
 popDEP['total'] = pop.sort_values("dep").groupby('dep').sum()['total']
@@ -49,25 +49,23 @@ df2 = pd.DataFrame(popDEPgroupby[['total']].max().sort_values('total', ascending
 df2["lon"]=0
 df2["lat"]=0
 lonlatlist =[]
+
 for total in df2["total"]:
   (dep,lon,lat,tot) = (pop[pop["total"]==total].reset_index().loc[0,['dep']][0], pop[pop["total"]==total].reset_index().loc[0,['lon']][0],pop[pop["total"]==total].reset_index().loc[0,['lat']][0],total)
   lonlatlist.append((dep,lon,lat,tot))
 lonlatlistdf = pd.DataFrame(lonlatlist)
-print(lonlatlistdf)
 lonlatlistdf.columns = ["dep","lon","lat","total"]
 lonlatlistdf.sort_values("dep", inplace = True)
 lonlatlistdf["total"]= popDEP['total']
 popDEP = lonlatlistdf
 # Population Index
 # Min-Max-normalized values of the log10 transformation
-popDEP['idx'] = normalize(np.log10(popDEP['total']))
+popDEP['idx'] = max_normalize(np.log10(popDEP['total']))
 popDEP.reset_index(inplace = True)
 
 del lonlatlistdf
 del lonlatlist
 del df2
-del pop
-print(popDEP)
 print('OK', flush=True)
 
 
@@ -80,111 +78,109 @@ print('Covid ... ', flush=True, end='')
 filePath = 'data/'
 fileName = 'Covid_data_history.csv'
 covid = pd.read_csv(filePath + fileName, sep=',').dropna()
-print(covid)
+covid['date'] = pd.to_datetime(covid['date'])
+# rename departments of la Corse to assure integer
 covid['numero'] = covid['numero'].replace({'2A':'201','2B':'202'}).astype(int)
+covid['numero'] = covid['numero'].astype(int)
+
+# remove oversea departments
+covid = covid[covid['numero']<203]
 
 # take 1-week moving average and take today's values
 #covid = covid.groupby('dep').rolling(window=7).mean()
 #covid = covid.groupby(level=0).tail(1).reset_index(drop=True)
 
+# add lon/lat + population index to covid dataframe
 popSubset = popDEP[['lon','lat','dep','idx']].drop_duplicates(subset=['dep'])
-covid['lon'] = [popSubset[popSubset['dep']==int(depNum)].lon.values.squeeze() for depNum in covid['numero']]
-covid['lat'] = [popSubset[popSubset['dep']==int(depNum)].lat.values.squeeze() for depNum in covid['numero']]
-covid['popidx'] = [popSubset[popSubset['dep']==int(depNum)].idx.values.squeeze() for depNum in covid['numero']]
-# remove French oversea departments
-covid = covid[:-5]
+covid = covid.merge(popSubset, how='inner', left_on='numero', right_on='dep')
 
 # extrapolate covid cases from deprtement to commune level
 #covidExtraToCom = pop.copy()
 #covidExtraToCom['hosp'] = [covid[covid['dep'] == depNum].hosp.values.squeeze() for depNum in covidExtraToCom['dep']]
 #covidExtraToCom['idx']  = covidExtraToCom['hosp'].where(covidExtraToCom.hosp>200,(covidExtraToCom.hosp/200)).where(covidExtraToCom.hosp<=200,1)
-print(covid)
 print('OK', flush=True)
   #endsection
 
 # PM2.5
 # -----------------------------------------------------------------------------
   #section| #%%
-print('PM2.5 ... ', flush=True, end='')
-#pm25 = pm25.sortby('longitude')
-#pm25 = pm25.sel(longitude=slice(-10,10),latitude=slice(55,40))
-#pm25Norm = pm25.where(pm25>10,0).where(pm25<20,1).where(pm25<10, (pm25/10 - 1))
-#pm25 = pm25Norm.where(pm25Norm<1,0)
-covid["pm25"]=float(0)
-covid["NO2"]=float(0)
-print("This takes at least 5 hours... Take a break!")
-for index, row in covid.iterrows():
-    filename = "pm25-"+row["date"]+".nc"
-    filename2 = "NO2-"+row["date"]+".nc"
-    pm25 = xr.open_dataset("data/pm25/" + filename)
-    NO2 = xr.open_dataset("data/NO2/" + filename2)
-    pm25 = pm25.drop('level').squeeze()
-    NO2 = NO2.drop('level').squeeze()
-    pm25.sortby('longitude')
-    NO2.sortby('longitude')
-    pm25.coords['longitude'] = (pm25.coords['longitude'] + 180) % 360 - 180
-    NO2.coords['longitude'] = (NO2.coords['longitude'] + 180) % 360 - 180
-    pm25df = pm25.to_dataframe()
-    pm25df = pm25df.reset_index()
-    NO2df = NO2.to_dataframe()
-    NO2df = NO2df.reset_index()
-    for index2,row2 in pm25df.iterrows():
-        if ((np.round(row2["longitude"],2),np.round(row2["latitude"],2)==(np.round(row["lon"],2),np.round(row["lat"],2)))):
-            covid.at[index,'pm25'] = row2.pm2p5_conc
-            break
-    for index3,row3 in NO2df.iterrows():
-        if ((np.round(row3["longitude"],2),np.round(row3["latitude"],2)==(np.round(row["lon"],2),np.round(row["lat"],2)))):
-            covid.at[index,'NO2'] = row3.no2_conc
-            break
 
-print(covid)
+start_date, end_date = ['2020-01-01','2021-04-01']
+dates = pd.date_range(start_date, end_date, freq='h')[:-1]
+
+print('PM2.5 ... ', flush=True, end='')
+filePath = './data/train/cams/reanalysis/'
+cams = xr.open_mfdataset(
+    './data/train/cams/reanalysis/*',
+    combine='nested', concat_dim='time',
+    parallel=True)
+# n_time_steps = cams.coords['time'].size
+# dates = dates[:-24]
+cams = cams.drop('level').squeeze()
+cams = cams.assign_coords(time=dates)
+cams = cams.assign_coords(longitude=(((cams['longitude'] + 180) % 360) - 180))
+cams = cams.sel(longitude=slice(-10,10),latitude=slice(55,40))
+cams = cams.sortby('longitude')
+
+# CAMS is hourly ==> take daily means
+cams = cams.resample({'time':'D'}).mean()
+# there seems to be a pretty annoying issue with dask.array
+# somehow I cannot manage to convert the dask.array to
+# a standard xarray.DataArray; unfortunately, xarray.interp()
+# seem not yet to work with dask.array; Therefore, as a workaround, I recreate
+# a DataArray from scratch to assure that is a standard DataArray and no
+# dask.array
+# another minor issue here is that this workaround is only possible for each
+# variable individually; really annoying....
+pm25 = xr.DataArray(
+    cams.pm2p5_conc.values,
+    dims=['time','latitude','longitude'],
+    coords = {
+        'time':dates.to_period('d').unique(),
+        'latitude':cams.coords['latitude'].values,
+        'longitude':cams.coords['longitude'].values
+    }
+)
+no2 = xr.DataArray(
+    cams.no2_conc.values,
+    dims=['time','latitude','longitude'],
+    coords = {
+        'time':dates.to_period('d').unique(),
+        'latitude':cams.coords['latitude'].values,
+        'longitude':cams.coords['longitude'].values
+    }
+)
+# recreate Dataset (without dask)
+cams = xr.Dataset({'pm25': pm25, 'no2':no2})
+# interpolate CAMS data to lon/lat of departments
+lons = xr.DataArray(
+    popDEP['lon'],
+    dims='dep',
+    coords={'dep':popDEP['dep']},
+    name='lon')
+lats = xr.DataArray(
+    popDEP['lat'],
+    dims='dep',
+    coords={'dep':popDEP['dep']},
+    name='lat')
+
+cams = cams.interp(longitude=lons, latitude=lats)
+cams = cams.to_dataframe().reset_index('dep')
+cams.index = cams.index.to_timestamp()
+cams = cams.reset_index()
+cams.columns
+covid = covid.rename(columns = {'date':'time'})
+covid = covid.merge(cams, how='inner', on=['time','dep'])
+
 covid.to_csv("Enriched_Covid_history_data.csv")
 
 
 
 
-# for filename in glob.glob('data/pm25/*.nc'):
-#     datefromfile = filename.replace("pm25-","").replace(".nc","").replace('data/pm25/',"")
-#     print(datefromfile)
-#     pm25 = xr.open_dataset(filename)
-#     print(pm25)
-#     pm25 = pm25.drop('level').squeeze()
-#     pm25 = pm25.drop('date').squeeze()
-#     pm25 = pm25.to_array()
-#     pm25.coords['longitude'] = (pm25.coords['longitude'] + 180) % 360 - 180
-#     pm25df = pm25.to_dataframe(name = "pm25")
-#     pm25df["date"]=datefromfile
-#     print(pm25df)
-#     dflist.append(pm25df)
-# counter = 0
-# for df in dflist:
-#     counter += 1
-#     if counter == 1:
-#         df1 = df
-#     else:
-#         frames = [df1, df]
-#         df1 = pd.concat(frames)
 
-# df1.to_csv("pm25history.csv")
-
-    
 print('OK')
   #endsection
 
 #endpart
 
-
-# =============================================================================
-# Interpolation
-# =============================================================================
-# We have to interpolate PM2.5 data from the gridded field
-# to the irregular grid points of regions/departments/communities
-# You may set a filter (takeEvery) which reduces the number of regions taken
-# into account if compuational cost is to high
-#part| #%%
-takeEvery = 1
-#lons, lats = pop.lon[::takeEvery], pop.lat[::takeEvery]
-#xrLons = xr.DataArray(lons, dims='com')
-#xrLats = xr.DataArray(lats, dims='com')
-#pm25Interpolated = pm25.interp(longitude=xrLons, latitude=xrLats)
 #endpart
