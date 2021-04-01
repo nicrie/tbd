@@ -10,6 +10,7 @@ __pycache__/
 data/pm25/
 data/covid/
 data/cams/
+data/train/
 data/Covid_data_history.csv
 forecast/
 
