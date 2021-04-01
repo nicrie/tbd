@@ -33,7 +33,7 @@ for date in df["Dates"]:
             'level': '0',
             'type': 'forecast',
             'time': '00:00',
-            'leadtime_hour': list(range(0,96,4)),
+            'leadtime_hour': 0,
         },
         save_to + file_name)
 
