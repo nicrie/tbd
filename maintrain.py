@@ -39,14 +39,34 @@ print('Population ... ', flush=True, end='')
 # pop2['idx']    = normalize(np.log10(pop2['pop']))
 pop         = pd.read_csv('./data/pop/fr/pop.csv', usecols=[0,1,2,3,4,5,6,42])
 pop.columns = ['reg', 'dep', 'com', 'article', 'com_nom', 'lon', 'lat', 'total']
-popDEP          = pop.copy().groupby('dep').median()
-popDEP['total'] = pop.groupby('dep').sum()['total']
-
+pop.reset_index(inplace = True)
+pop=pop.drop(columns=['index'])
+print(pop)
+popDEPgroupby = pop.groupby("dep")
+popDEP = pop.copy().groupby('dep').median()
+popDEP['total'] = pop.sort_values("dep").groupby('dep').sum()['total']
+df2 = pd.DataFrame(popDEPgroupby[['total']].max().sort_values('total', ascending = False)).reset_index()
+df2["lon"]=0
+df2["lat"]=0
+lonlatlist =[]
+for total in df2["total"]:
+  (dep,lon,lat,tot) = (pop[pop["total"]==total].reset_index().loc[0,['dep']][0], pop[pop["total"]==total].reset_index().loc[0,['lon']][0],pop[pop["total"]==total].reset_index().loc[0,['lat']][0],total)
+  lonlatlist.append((dep,lon,lat,tot))
+lonlatlistdf = pd.DataFrame(lonlatlist)
+print(lonlatlistdf)
+lonlatlistdf.columns = ["dep","lon","lat","total"]
+lonlatlistdf.sort_values("dep", inplace = True)
+lonlatlistdf["total"]= popDEP['total']
+popDEP = lonlatlistdf
 # Population Index
 # Min-Max-normalized values of the log10 transformation
-pop['idx']    = normalize(np.log10(pop['total']))
 popDEP['idx'] = normalize(np.log10(popDEP['total']))
 popDEP.reset_index(inplace = True)
+
+del lonlatlistdf
+del lonlatlist
+del df2
+del pop
 print(popDEP)
 print('OK', flush=True)
 
@@ -104,8 +124,6 @@ for index, row in covid.iterrows():
     NO2 = NO2.drop('level').squeeze()
     pm25.sortby('longitude')
     NO2.sortby('longitude')
-    pm25 = pm25.sel(time = timedelta(days = 0, hours = 0, minutes = 0))
-    NO2 = NO2.sel(time = timedelta(days = 0, hours = 0, minutes = 0))
     pm25.coords['longitude'] = (pm25.coords['longitude'] + 180) % 360 - 180
     NO2.coords['longitude'] = (NO2.coords['longitude'] + 180) % 360 - 180
     pm25df = pm25.to_dataframe()
