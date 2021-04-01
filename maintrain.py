@@ -112,14 +112,13 @@ print('PM2.5 ... ', flush=True, end='')
 #pm25 = pm25Norm.where(pm25Norm<1,0)
 covid["pm25"]=0
 covid["NO2"]=0
+print("This takes at least 5 hours... Take a break!")
 for index, row in covid.iterrows():
     print(row["date"])
     filename = "pm25-"+row["date"]+".nc"
     filename2 = "NO2-"+row["date"]+".nc"
     pm25 = xr.open_dataset("data/pm25/" + filename)
     NO2 = xr.open_dataset("data/NO2/" + filename2)
-    print(pm25)
-    print(NO2)
     pm25 = pm25.drop('level').squeeze()
     NO2 = NO2.drop('level').squeeze()
     pm25.sortby('longitude')
@@ -130,16 +129,15 @@ for index, row in covid.iterrows():
     pm25df = pm25df.reset_index()
     NO2df = NO2.to_dataframe()
     NO2df = NO2df.reset_index()
-    print(pm25df)
-    print(NO2df)
     for index2,row2 in pm25df.iterrows():
         if ((np.round(row2["longitude"],2),np.round(row2["latitude"],2)==(np.round(row["lon"],2),np.round(row["lat"],2)))):
-            row["pm25"]=row2["pm2p5_conc"]
+            covid.at[index,'pm25'] = row2.pm2p5_conc
             break
     for index3,row3 in NO2df.iterrows():
         if ((np.round(row3["longitude"],2),np.round(row3["latitude"],2)==(np.round(row["lon"],2),np.round(row["lat"],2)))):
-            row["NO2"]=row3["no2_conc"]
+            covid.at[index,'NO2'] = row3.no2_conc
             break
+    print(covid[covid["pm25"]!=0])
 print(covid)
 covid.to_csv("Enriched_Covid_history_data.csv")
 
