@@ -9,7 +9,12 @@ __pycache__/
 # personal folders
 data/pm25/
 data/covid/
+data/cams/
+data/Covid_data_history.csv
 forecast/
+
+# cdsapi files
+.cdsapi*
 
 # Distribution / packaging
 .Python
