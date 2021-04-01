@@ -32,7 +32,6 @@ print('Population ... ', flush=True, end='')
 #pop2 = pd.read_excel ('data/pop/fr/popfr.xls', sheet_name='2021')
 # pop1.columns = ['depnb', 'depname', 'pop']
 # pop2.columns = ['depnb', 'depname', 'pop']
-
 # Population Index
 # Min-Max-normalized values of the log10 transformation
 # pop1['idx']    = normalize(np.log10(pop1['pop']))
@@ -106,10 +105,6 @@ print('OK', flush=True)
 # -----------------------------------------------------------------------------
   #section| #%%
 print('PM2.5 ... ', flush=True, end='')
-#pm25 = pm25.sortby('longitude')
-#pm25 = pm25.sel(longitude=slice(-10,10),latitude=slice(55,40))
-#pm25Norm = pm25.where(pm25>10,0).where(pm25<20,1).where(pm25<10, (pm25/10 - 1))
-#pm25 = pm25Norm.where(pm25Norm<1,0)
 covid["pm25"]=float(0)
 covid["NO2"]=float(0)
 print("This takes at least 5 hours... Take a break!")
@@ -136,7 +131,8 @@ for index, row in covid.iterrows():
         if ((np.round(row3["longitude"],2),np.round(row3["latitude"],2)==(np.round(row["lon"],2),np.round(row["lat"],2)))):
             covid.at[index,'NO2'] = row3.no2_conc
             break
-
+    print(covid[covid["pm25"]!=0])
+  
 print(covid)
 covid.to_csv("Enriched_Covid_history_data.csv")
 
