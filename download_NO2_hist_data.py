@@ -37,7 +37,8 @@ for date in tqdm(df["Dates"]):
             'date': referencedatestring,
             'type': 'forecast',
             'time': '00:00',
-            'leadtime_hour': list(range(0,96,4)),
+            #'leadtime_hour': list(range(0,96,4)),
+            'leadtime_hour': 0,
             'area': [
                 51.75, -5.83, 41.67,
                 11.03,
