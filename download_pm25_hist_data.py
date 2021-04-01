@@ -4,16 +4,23 @@ import cdsapi
 import yaml
 import numpy as np
 import pandas as pd
+from tqdm import tqdm
 
 work_dir = os.path.dirname(os.path.abspath(__file__))
 save_to = os.path.join(work_dir, 'data/pm25/')
 if not os.path.exists(save_to):
     os.makedirs(save_to)
 
+# get personal directory of cdsapi
+try:
+    with open('.cdsapirc_dir', 'r') as file:
+        dir_cams_api = file.readline().rstrip()
+except OSError:
+    raise OSError("cdsapirc file cannot be found. Set the directory in .cdsapirc_dir")
+
 print('Download data from cams ...', flush=True)
-dir_cams_api = '/home/ludo915/.cdsapirc'
 df = pd.read_csv("calendar.csv", sep = ";")
-for date in df["Dates"]:
+for date in tqdm(df["Dates"]):
     referencedate = datetime.datetime.strptime(date, '%Y-%m-%d')
     referencedatestring = referencedate.strftime("%Y-%m-%d")
     file_name = 'pm25-{:}.nc'.format(referencedatestring)
