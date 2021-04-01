@@ -110,8 +110,8 @@ print('PM2.5 ... ', flush=True, end='')
 #pm25 = pm25.sel(longitude=slice(-10,10),latitude=slice(55,40))
 #pm25Norm = pm25.where(pm25>10,0).where(pm25<20,1).where(pm25<10, (pm25/10 - 1))
 #pm25 = pm25Norm.where(pm25Norm<1,0)
-covid["pm25"]=0
-covid["NO2"]=0
+covid["pm25"]=float(0)
+covid["NO2"]=float(0)
 print("This takes at least 5 hours... Take a break!")
 for index, row in covid.iterrows():
     print(row["date"])
@@ -131,13 +131,12 @@ for index, row in covid.iterrows():
     NO2df = NO2df.reset_index()
     for index2,row2 in pm25df.iterrows():
         if ((np.round(row2["longitude"],2),np.round(row2["latitude"],2)==(np.round(row["lon"],2),np.round(row["lat"],2)))):
-            covid.at[index,'pm25'] = row2.pm2p5_conc
+            covid.at[index,'pm25'] = float(row2.pm2p5_conc)
             break
     for index3,row3 in NO2df.iterrows():
         if ((np.round(row3["longitude"],2),np.round(row3["latitude"],2)==(np.round(row["lon"],2),np.round(row["lat"],2)))):
-            covid.at[index,'NO2'] = row3.no2_conc
+            covid.at[index,'NO2'] = float(row3.no2_conc)
             break
-    print(covid[covid["pm25"]!=0])
 print(covid)
 covid.to_csv("Enriched_Covid_history_data.csv")
 
