@@ -5,7 +5,8 @@
 # Imports #%%
 # =============================================================================
 #part| #%%
-import datetime
+from datetime import datetime
+
 import numpy as np
 import pandas as pd
 from datetime import timedelta
@@ -24,8 +25,37 @@ def mse(ground_truth, predictions):
 
 df = pd.read_csv("Enriched_Covid_history_data.csv")
 df = df.drop(columns = ['Unnamed: 0'])
+df["time"]=pd.to_datetime(df["time"])
 print (df)
 print (df.columns)
+avg = []
+for i in df.index:
+    date0 = df.loc[i,"time"]
+    depnum = df.loc[i,"numero"]
+    date1 = date0 -pd.Timedelta("1 days")
+    date2 = date0 -pd.Timedelta("2 days")
+    date3 = date0 -pd.Timedelta("3 days")
+    date4 = date0 -pd.Timedelta("4 days")
+    date5 = date0 -pd.Timedelta("5 days")
+    date6 = date0 -pd.Timedelta("6 days")
+    avgPM25 = ((df.loc[i,"pm25"] + df[(df["time"]== date1) & (df["numero"]==depnum)].reset_index()["pm25"]\
+                               + df[(df["time"]== date2) & (df["numero"]==depnum)].reset_index()["pm25"]\
+                               + df[(df["time"]== date3) & (df["numero"]==depnum)].reset_index()["pm25"]\
+                               + df[(df["time"]== date4) & (df["numero"]==depnum)].reset_index()["pm25"]\
+                               + df[(df["time"]== date5) & (df["numero"]==depnum)].reset_index()["pm25"]\
+                               + df[(df["time"]== date6) & (df["numero"]==depnum)].reset_index()["pm25"])/7)
+    if list(avgPM25)==[]: 
+        avg.append("NAN") 
+    else:
+        avg.append(list(avgPM25)[0])
+
+
+avgdf = pd.DataFrame(avg)
+avgdf.columns=["pm257davg"]
+
+df["pm257davg"]=avgdf["pm257davg"]
+
+print(df)
 
 X=df[['idx', 'pm25', 'no2']]
 y= df['newhospi']
