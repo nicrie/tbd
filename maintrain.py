@@ -127,6 +127,8 @@ cams.columns
 covid = covid.rename(columns = {'date':'time'})
 covid = covid.merge(cams, how='inner', on=['time','dep_num'])
 
+print(covid)
+
 covid.to_csv("Enriched_Covid_history_data.csv")
 
 print('OK')
