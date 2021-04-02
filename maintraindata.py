@@ -127,8 +127,63 @@ cams.columns
 covid = covid.rename(columns = {'date':'time'})
 covid = covid.merge(cams, how='inner', on=['time','dep_num'])
 
-print(covid)
+df = covid
+df["time"]=pd.to_datetime(df["time"])
+print (df)
+print (df.columns)
+avgpm25 = []
+avgno2 = []
+for i in df.index:
+    date0 = df.loc[i,"time"]
+    depnum = df.loc[i,"numero"]
+    date1 = date0 -pd.Timedelta("1 days")
+    date2 = date0 -pd.Timedelta("2 days")
+    date3 = date0 -pd.Timedelta("3 days")
+    date4 = date0 -pd.Timedelta("4 days")
+    date5 = date0 -pd.Timedelta("5 days")
+    date6 = date0 -pd.Timedelta("6 days")
+    day0data = df.loc[i]
+    day1data = df[(df["time"]== date1) & (df["numero"]==depnum)].reset_index()
+    day2data = df[(df["time"]== date2) & (df["numero"]==depnum)].reset_index()
+    day3data = df[(df["time"]== date3) & (df["numero"]==depnum)].reset_index()
+    day4data = df[(df["time"]== date4) & (df["numero"]==depnum)].reset_index()
+    day5data = df[(df["time"]== date5) & (df["numero"]==depnum)].reset_index()
+    day6data = df[(df["time"]== date6) & (df["numero"]==depnum)].reset_index()
 
-covid.to_csv("Enriched_Covid_history_data.csv")
+    avgPM25 = ((day0data["pm25"] + day1data["pm25"]\
+                               + day1data["pm25"]\
+                               + day2data["pm25"]\
+                               + day3data["pm25"]\
+                               + day4data["pm25"]\
+                               + day5data["pm25"])/7)
+    avgNO2 = ((day0data["no2"] + day1data["no2"]\
+                               + day1data["no2"]\
+                               + day2data["no2"]\
+                               + day3data["no2"]\
+                               + day4data["no2"]\
+                               + day5data["no2"])/7)
+    if list(avgPM25)==[]: 
+        avgpm25.append("NaN") 
+    else:
+        avgpm25.append(list(avgPM25)[0])
+    
+    if list(avgNO2)==[]: 
+        avgno2.append("NaN") 
+    else:
+        avgno2.append(list(avgPM25)[0])
+
+
+avgpm25df = pd.DataFrame(avgpm25)
+avgpm25df.columns=["pm257davg"]
+
+avgno2df = pd.DataFrame(avgno2)
+avgno2df.columns=["no27davg"]
+
+df["pm257davg"]=avgpm25df["pm257davg"]
+df["no27davg"]=avgno2df["no27davg"]
+
+print(df)
+df.to_csv("Enriched_Covid_history_data.csv", index = False)
+
 
 print('OK')
