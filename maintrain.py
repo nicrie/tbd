@@ -27,6 +27,9 @@ df = df.drop(columns = ['Unnamed: 0'])
 print (df)
 print (df.columns)
 
+for i in df.index
+    print(df.loc[i,"time"])
+
 X=df[['idx', 'pm25', 'no2']]
 y= df['newhospi']
 
