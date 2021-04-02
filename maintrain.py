@@ -5,130 +5,85 @@
 # Imports #%%
 # =============================================================================
 #part| #%%
-import sys
 import datetime
 import numpy as np
 import pandas as pd
-import xarray as xr
 from datetime import timedelta
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.tree import DecisionTreeRegressor
+from sklearn.ensemble import GradientBoostingRegressor
+from sklearn.ensemble import VotingClassifier
+from sklearn.ensemble import VotingRegressor
+import xgboost as xgb
 
+def mse(ground_truth, predictions):
+    diff = (ground_truth - predictions)**2
+    return diff.mean()
 
-# =============================================================================
-# Functions #%%
-# =============================================================================
+df = pd.read_csv("Enriched_Covid_history_data.csv")
+df = df.drop(columns = ['Unnamed: 0'])
+print (df)
+print (df.columns)
 
-def max_normalize(x):
-    return (x - x.min()) / (x.max() - x.min())
+X=df[['idx', 'pm25', 'no2']]
+y= df['newhospi']
 
-# =============================================================================
-# Merge data #%%
-# =============================================================================
+print("RandomForestRegressor Model")
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33)
+regr = RandomForestRegressor(max_depth=20)
+regr.fit(X_train, y_train)
+pred = regr.predict(X_test).round(0)
+RFRMSE = mse(y_test, pred)
+print("Average error on new number of hospitalizations per day:", round(RFRMSE ** 0.5,0))
+print(RFRMSE)
 
-# Population
-# -----------------------------------------------------------------------------
-print('Population ... ', flush=True, end='')
-population  = pd.read_csv('./data/pop/fr/population_2020.csv')
-
-# Population Index
-# Min-Max-normalized values of the log10 transformation
-population['idx'] = max_normalize(np.log10(population['total']))
-population.reset_index(inplace = True, drop=True)
-print('OK', flush=True)
-
-
-# Covid #%%
-# -----------------------------------------------------------------------------
-print('Covid ... ', flush=True, end='')
-filePath = 'data/'
-fileName = 'Covid_data_history.csv'
-covid = pd.read_csv(filePath + fileName, sep=',').dropna()
-covid['date'] = pd.to_datetime(covid['date'])
-# rename departments of la Corse to assure integer
-covid['numero'] = covid['numero'].replace({'2A':'201','2B':'202'}).astype(int)
-covid['numero'] = covid['numero'].astype(int)
-
-# remove oversea departments
-covid = covid[covid['numero']<203]
-
-# take 1-week moving average and take today's values
-# covid = covid.groupby('dep').rolling(window=7).mean()
-# covid = covid.groupby(level=0).tail(1).reset_index(drop=True)
-
-# add lon/lat + population index to covid dataframe
-covid = covid.merge(population, how='inner', left_on='numero', right_on='dep_num')
-print('OK', flush=True)
-
-# CAMS #%%
-# -----------------------------------------------------------------------------
-start_date, end_date = ['2020-01-01','2021-04-01']
-dates = pd.date_range(start_date, end_date, freq='h')[:-1]
-
-print('CAMS ... ', flush=True, end='')
-filePath = './data/train/cams/reanalysis/'
-cams = xr.open_mfdataset(
-    './data/train/cams/reanalysis/*',
-    combine='nested', concat_dim='time',
-    parallel=True)
-# n_time_steps = cams.coords['time'].size
-# dates = dates[:-24]
-cams = cams.drop('level').squeeze()
-cams = cams.assign_coords(time=dates)
-cams = cams.assign_coords(longitude=(((cams['longitude'] + 180) % 360) - 180))
-cams = cams.sel(longitude=slice(-10,10),latitude=slice(55,40))
-cams = cams.sortby('longitude')
-
-# CAMS is hourly ==> take daily means
-cams = cams.resample({'time':'D'}).mean()
-# there seems to be a pretty annoying issue with dask.array
-# somehow I cannot manage to convert the dask.array to
-# a standard xarray.DataArray; unfortunately, xarray.interp()
-# seem not yet to work with dask.array; Therefore, as a workaround, I recreate
-# a DataArray from scratch to assure that is a standard DataArray and no
-# dask.array
-# another minor issue here is that this workaround is only possible for each
-# variable individually; really annoying....
-pm25 = xr.DataArray(
-    cams.pm2p5_conc.values,
-    dims=['time','latitude','longitude'],
-    coords = {
-        'time':dates.to_period('d').unique(),
-        'latitude':cams.coords['latitude'].values,
-        'longitude':cams.coords['longitude'].values
-    }
+print("GradientBoostingRegressor Model")
+model = GradientBoostingRegressor(
+    n_estimators=100, 
+    learning_rate=0.1
 )
-no2 = xr.DataArray(
-    cams.no2_conc.values,
-    dims=['time','latitude','longitude'],
-    coords = {
-        'time':dates.to_period('d').unique(),
-        'latitude':cams.coords['latitude'].values,
-        'longitude':cams.coords['longitude'].values
-    }
-)
-# recreate Dataset (without dask)
-cams = xr.Dataset({'pm25': pm25, 'no2':no2})
-# interpolate CAMS data to lon/lat of departments
-lons = xr.DataArray(
-    population['lon'],
-    dims='dep_num',
-    coords={'dep_num':population['dep_num']},
-    name='lon')
-lats = xr.DataArray(
-    population['lat'],
-    dims='dep_num',
-    coords={'dep_num':population['dep_num']},
-    name='lat')
+model.fit(X_train,y_train)
+pred4 = model.predict(X_test).round(0)
+MSE4 = mse(y_test, pred4)
+print("Average error on new number of hospitalizations per day:", round(MSE4 ** 0.5,0))
+print(MSE4)
 
-cams = cams.interp(longitude=lons, latitude=lats)
-cams = cams.to_dataframe().reset_index('dep_num')
-cams.index = cams.index.to_timestamp()
-cams = cams.reset_index()
-cams.columns
-covid = covid.rename(columns = {'date':'time'})
-covid = covid.merge(cams, how='inner', on=['time','dep_num'])
 
-print(covid)
+print("DecisionTreeRegressor Model")
+regr2 = DecisionTreeRegressor()
+regr2.fit(X_train, y_train)
+pred2 = regr2.predict(X_test).round(0)
+RFRMSE2 = mse(y_test, pred2)
+print("Average error on new number of hospitalizations per day:", round(RFRMSE2 ** 0.5,0))
+print(RFRMSE2)
 
-covid.to_csv("Enriched_Covid_history_data.csv")
+print("XGBoost Regressor Model")
+xgb_model = xgb.XGBRegressor(n_jobs=1).fit(X_train, y_train)
+pred3 = xgb_model.predict(X_test).round(0)
+RFRMSE3 = mse(y_test, pred3)
+print("Average error on new number of hospitalizations per day:", round(RFRMSE3 ** 0.5,0))
+print(RFRMSE3)
 
+print("VotingRegressor")
+ensemble = VotingRegressor(
+    estimators = [("rf", regr),("gbr", model),("dtr",regr2),("xgbr",xgb_model)],
+   )
+
+ensemble.fit(X_train, y_train)
+predvot = ensemble.predict(X_test).round(0)
+MSE5 = mse(y_test,predvot)
+print("Average error on new number of hospitalizations per day:", round(MSE5 ** 0.5,0))
+print(MSE5)
+
+print("VotingRegressor2")
+ensemble2 = VotingRegressor(
+    estimators = [("rf", regr),("gbr", model)],
+   )
+
+ensemble2.fit(X_train, y_train)
+predvot2 = ensemble2.predict(X_test).round(0)
+MSE6 = mse(y_test,predvot2)
+print("Average error on new number of hospitalizations per day:", round(MSE6 ** 0.5,0))
+print(MSE6)
 print('OK')
