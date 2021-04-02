@@ -16,6 +16,7 @@ from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.ensemble import VotingClassifier
 from sklearn.ensemble import VotingRegressor
 import xgboost as xgb
+from tpot import TPOTRegressor
 
 def mse(ground_truth, predictions):
     diff = (ground_truth - predictions)**2
@@ -87,3 +88,9 @@ MSE6 = mse(y_test,predvot2)
 print("Average error on new number of hospitalizations per day:", round(MSE6 ** 0.5,0))
 print(MSE6)
 print('OK')
+
+print("TPOTRegressor")
+tpot = TPOTRegressor(generations=20, population_size=50, verbosity=2, random_state=42)
+tpot.fit(X_train, y_train)
+print(tpot.score(X_test, y_test))
+tpot.export('tpot_covid_pipeline.py')
