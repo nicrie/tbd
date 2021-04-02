@@ -2,78 +2,42 @@
 # -*- coding: utf-8 -*-
 
 # =============================================================================
-# Imports
+# Imports #%%
 # =============================================================================
 #part| #%%
 import sys
-
 import datetime
 import numpy as np
 import pandas as pd
 import xarray as xr
-import regionmask
-import cartopy.crs as ccrs
-import cartopy.feature as cfeature
-import matplotlib.pyplot as plt
-import matplotlib.gridspec as gridspec
-import seaborn as sns
-import io
-import imageio
-import glob
 from datetime import timedelta
 
+
 # =============================================================================
-# Functions
+# Functions #%%
 # =============================================================================
 
 def max_normalize(x):
     return (x - x.min()) / (x.max() - x.min())
 
 # =============================================================================
-# Merge all data
+# Merge data #%%
 # =============================================================================
-
 
 # Population
 # -----------------------------------------------------------------------------
-  #section| #%%
 print('Population ... ', flush=True, end='')
+population  = pd.read_csv('./data/pop/fr/population_2020.csv')
 
-pop         = pd.read_csv('./data/pop/fr/pop.csv', usecols=[0,1,2,3,4,5,6,42])
-pop.columns = ['reg', 'dep', 'com', 'article', 'com_nom', 'lon', 'lat', 'total']
-pop = pop.reset_index().drop(columns='index')
-popDEPgroupby = pop.groupby("dep")
-popDEP = pop.copy().groupby('dep').median()
-popDEP['total'] = pop.sort_values("dep").groupby('dep').sum()['total']
-df2 = pd.DataFrame(popDEPgroupby[['total']].max().sort_values('total', ascending = False)).reset_index()
-df2["lon"]=0
-df2["lat"]=0
-lonlatlist =[]
-
-for total in df2["total"]:
-  (dep,lon,lat,tot) = (pop[pop["total"]==total].reset_index().loc[0,['dep']][0], pop[pop["total"]==total].reset_index().loc[0,['lon']][0],pop[pop["total"]==total].reset_index().loc[0,['lat']][0],total)
-  lonlatlist.append((dep,lon,lat,tot))
-lonlatlistdf = pd.DataFrame(lonlatlist)
-lonlatlistdf.columns = ["dep","lon","lat","total"]
-lonlatlistdf.sort_values("dep", inplace = True)
-lonlatlistdf["total"]= popDEP['total']
-popDEP = lonlatlistdf
 # Population Index
 # Min-Max-normalized values of the log10 transformation
-popDEP['idx'] = max_normalize(np.log10(popDEP['total']))
-popDEP.reset_index(inplace = True)
-
-del lonlatlistdf
-del lonlatlist
-del df2
+population['idx'] = max_normalize(np.log10(population['total']))
+population.reset_index(inplace = True, drop=True)
 print('OK', flush=True)
 
 
-#endsection
-
-# Covid
+# Covid #%%
 # -----------------------------------------------------------------------------
-  #section| #%%
 print('Covid ... ', flush=True, end='')
 filePath = 'data/'
 fileName = 'Covid_data_history.csv'
@@ -87,28 +51,19 @@ covid['numero'] = covid['numero'].astype(int)
 covid = covid[covid['numero']<203]
 
 # take 1-week moving average and take today's values
-#covid = covid.groupby('dep').rolling(window=7).mean()
-#covid = covid.groupby(level=0).tail(1).reset_index(drop=True)
+# covid = covid.groupby('dep').rolling(window=7).mean()
+# covid = covid.groupby(level=0).tail(1).reset_index(drop=True)
 
 # add lon/lat + population index to covid dataframe
-popSubset = popDEP[['lon','lat','dep','idx']].drop_duplicates(subset=['dep'])
-covid = covid.merge(popSubset, how='inner', left_on='numero', right_on='dep')
-
-# extrapolate covid cases from deprtement to commune level
-#covidExtraToCom = pop.copy()
-#covidExtraToCom['hosp'] = [covid[covid['dep'] == depNum].hosp.values.squeeze() for depNum in covidExtraToCom['dep']]
-#covidExtraToCom['idx']  = covidExtraToCom['hosp'].where(covidExtraToCom.hosp>200,(covidExtraToCom.hosp/200)).where(covidExtraToCom.hosp<=200,1)
+covid = covid.merge(population, how='inner', left_on='numero', right_on='dep_num')
 print('OK', flush=True)
-  #endsection
 
-# PM2.5
+# CAMS #%%
 # -----------------------------------------------------------------------------
-  #section| #%%
-
 start_date, end_date = ['2020-01-01','2021-04-01']
 dates = pd.date_range(start_date, end_date, freq='h')[:-1]
 
-print('PM2.5 ... ', flush=True, end='')
+print('CAMS ... ', flush=True, end='')
 filePath = './data/train/cams/reanalysis/'
 cams = xr.open_mfdataset(
     './data/train/cams/reanalysis/*',
@@ -154,35 +109,26 @@ no2 = xr.DataArray(
 cams = xr.Dataset({'pm25': pm25, 'no2':no2})
 # interpolate CAMS data to lon/lat of departments
 lons = xr.DataArray(
-    popDEP['lon'],
-    dims='dep',
-    coords={'dep':popDEP['dep']},
+    population['lon'],
+    dims='dep_num',
+    coords={'dep_num':population['dep_num']},
     name='lon')
 lats = xr.DataArray(
-    popDEP['lat'],
-    dims='dep',
-    coords={'dep':popDEP['dep']},
+    population['lat'],
+    dims='dep_num',
+    coords={'dep_num':population['dep_num']},
     name='lat')
 
 cams = cams.interp(longitude=lons, latitude=lats)
-cams = cams.to_dataframe().reset_index('dep')
+cams = cams.to_dataframe().reset_index('dep_num')
 cams.index = cams.index.to_timestamp()
 cams = cams.reset_index()
 cams.columns
 covid = covid.rename(columns = {'date':'time'})
-covid = covid.merge(cams, how='inner', on=['time','dep'])
+covid = covid.merge(cams, how='inner', on=['time','dep_num'])
 
 print(covid)
 
 covid.to_csv("Enriched_Covid_history_data.csv")
 
-
-
-
-
 print('OK')
-  #endsection
-
-#endpart
-
-#endpart
