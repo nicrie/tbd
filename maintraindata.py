@@ -164,6 +164,7 @@ avgno2 = []
 avgo3 = []
 avgco = []
 avgpm10 = []
+hospi = []
 for i in df.index:
     date0 = df.loc[i,"time"]
     depnum = df.loc[i,"numero"]
@@ -173,6 +174,13 @@ for i in df.index:
     date4 = date0 -pd.Timedelta("4 days")
     date5 = date0 -pd.Timedelta("5 days")
     date6 = date0 -pd.Timedelta("6 days")
+    dayminus1tothospi  = df[(df["time"]== date1) & (df["numero"]==depnum)].reset_index()["hospi"]
+
+    if list(dayminus1tothospi)==[]: 
+        hospi.append("NaN") 
+    else:
+        hospi.append(list(dayminus1tothospi)[0])
+
     day0data = df.loc[i]
     day1data = df[(df["time"]== date1) & (df["numero"]==depnum)].reset_index()
     day2data = df[(df["time"]== date2) & (df["numero"]==depnum)].reset_index()
@@ -238,6 +246,8 @@ for i in df.index:
 
 
 
+tothospi = pd.DataFrame(hospi)
+tothospi.columns =["hospiprevday"]
 
 avgpm25df = pd.DataFrame(avgpm25)
 avgpm25df.columns=["pm257davg"]
@@ -254,6 +264,7 @@ avgpm10df.columns=["pm107davg"]
 avgcodf = pd.DataFrame(avgco)
 avgcodf.columns=["co7davg"]
 
+df["hospiprevday"]=tothospi["hospiprevday"]
 df["pm257davg"]=avgpm25df["pm257davg"]
 df["no27davg"]=avgno2df["no27davg"]
 df["o37davg"]=avgo3df["o37davg"]
