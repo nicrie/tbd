@@ -23,6 +23,7 @@ from tpot import TPOTRegressor
 from tensorflow.keras.models import Sequential
 from tensorflow.keras import layers
 import tensorflow as tf 
+from tensorflow.keras import callbacks
 
 def mse(ground_truth, predictions):
     diff = (ground_truth - predictions)**2
@@ -41,34 +42,34 @@ y= df['newhospi']
 X_train, X_test, y_train, y_test = train_test_split(X1, y, test_size=0.33,random_state = 84)
 X_train2, X_test2, y_train2, y_test2 = train_test_split(X2, y, test_size=0.33,random_state = 84)
 print("Neural Network")
-X_trainNN = X_train2.values.reshape(22168, 11, 1)
+X_trainNN = X_train2.values.reshape(X_train2.shape[0], X_train2.shape[1], 1)
 y_trainNN = y_train2.values
-print(X_trainNN.shape)
-print(X_trainNN)
-print(y_trainNN)
+X_testNN = X_test2.values.reshape(X_test2.shape[0],X_test2.shape[1],1)
+y_testNN = y_test2.values
 NNmodel = Sequential()
 #NNmodel.add(layers.Dense(215, input_shape=(X_trainNN.shape[0], X_trainNN.shape[1])))
-NNmodel.add(layers.LSTM(units=22, activation='relu',return_sequences=True, input_shape=X_trainNN.shape[1:]))
-NNmodel.add(layers.Dense(11, activation="relu"))
-NNmodel.add(layers.Dense(22, activation="relu"))
-NNmodel.add(layers.Dense(11, activation="relu"))
+NNmodel.add(layers.LSTM(units=22, activation='tanh',return_sequences=True, input_shape=X_trainNN.shape[1:]))
+NNmodel.add(layers.LSTM(units=10, activation='tanh', return_sequences=False))
 NNmodel.add(layers.Dense(1, activation="linear"))
 
 # The compilation
 NNmodel.compile(loss='mse', 
-              optimizer='adam')
+              optimizer='rmsprop')
+
+es = callbacks.EarlyStopping(patience=30, restore_best_weights=True)
 
 # The fit
 NNmodel.fit(X_trainNN, y_trainNN,
-         batch_size=16,
-         epochs=50, verbose=1)
+         batch_size=16, validation_split = 0.3,
+         epochs=100, verbose=1,callbacks=[es])
 
 # The prediction
-NNpred = NNmodel.predict(X_test2.values.reshape(X_test2.shape[0],X_test2.shape[1],1)) 
-MSE7 = mse(y_test2,NNpred)
-print("Average error on new number of hospitalizations per day:", round(MSE7 ** 0.5,0))
-print(MSE7)
-print('OK')
+print(NNmodel.evaluate(X_testNN, y_testNN, verbose=0))
+print("Average error on new number of hospitalizations per day:", round(NNmodel.evaluate(X_testNN, y_testNN, verbose=0)** 0.5,0))
+
+#print('validation loss (MSE):', val_loss, '\n validation MAE:', val_mae)
+#print("Average error on new number of hospitalizations per day:", round(val_mae ** 0.5,0))
+
 print(" Scikit Learn RandomForestRegressor without feature engineering")
 regr = RandomForestRegressor()
 regr.fit(X_train, y_train)
