@@ -1,0 +1,97 @@
+Region;Departement;depnum
+Auvergne-Rhône-Alpes;Ain;1
+Auvergne-Rhône-Alpes;Allier;3
+Auvergne-Rhône-Alpes;Ardèche;7
+Auvergne-Rhône-Alpes;Cantal;15
+Auvergne-Rhône-Alpes;Drôme;26
+Auvergne-Rhône-Alpes;Isère;38
+Auvergne-Rhône-Alpes;Loire;42
+Auvergne-Rhône-Alpes;Haute-Loire;43
+Auvergne-Rhône-Alpes;Puy-de-Dôme;63
+Auvergne-Rhône-Alpes;Rhône;69
+Auvergne-Rhône-Alpes;Savoie;73
+Auvergne-Rhône-Alpes;Haute-Savoie;74
+Bourgogne-Franche-Comté;Côte-d'Or;21
+Bourgogne-Franche-Comté;Doubs;25
+Bourgogne-Franche-Comté;Jura;39
+Bourgogne-Franche-Comté;Nièvre;58
+Bourgogne-Franche-Comté;Haute-Saône;70
+Bourgogne-Franche-Comté;Saône-et-Loire;71
+Bourgogne-Franche-Comté;Yonne;89
+Bourgogne-Franche-Comté;Territoire de Belfort;90
+Bretagne;Côtes-d'Armor;22
+Bretagne;Finistère;29
+Bretagne;Ille-et-Vilaine;35
+Bretagne;Morbihan;56
+Centre-Val de Loire;Cher;18
+Centre-Val de Loire;Eure-et-Loir;28
+Centre-Val de Loire;Indre;36
+Centre-Val de Loire;Indre-et-Loire;37
+Centre-Val de Loire;Loir-et-Cher;41
+Centre-Val de Loire;Loiret;45
+Corse;Corse-du-Sud;2A
+Corse;Haute-Corse;2B
+Grand Est;Ardennes;8
+Grand Est;Aube;10
+Grand Est;Marne;51
+Grand Est;Haute-Marne;52
+Grand Est;Meurthe-et-Moselle;54
+Grand Est;Meuse;55
+Grand Est;Moselle;57
+Grand Est;Bas-Rhin;67
+Grand Est;Haut-Rhin;68
+Grand Est;Vosges;88
+Hauts-de-France;Aisne;2
+Hauts-de-France;Nord;59
+Hauts-de-France;Oise;60
+Hauts-de-France;Pas-de-Calais;62
+Hauts-de-France;Somme;80
+Île-de-France;Paris;75
+Île-de-France;Seine-et-Marne;77
+Île-de-France;Yvelines;78
+Île-de-France;Essonne;91
+Île-de-France;Hauts-de-Seine;92
+Île-de-France;Seine-St-Denis;93
+Île-de-France;Val-de-Marne;94
+Île-de-France;Val-d'Oise;95
+Normandie;Calvados;14
+Normandie;Eure;27
+Normandie;Manche;50
+Normandie;Orne;61
+Normandie;Seine-Maritime;76
+Nouvelle-Aquitaine;Charente;16
+Nouvelle-Aquitaine;Charente-Maritime;17
+Nouvelle-Aquitaine;Corrèze;19
+Nouvelle-Aquitaine;Creuse;23
+Nouvelle-Aquitaine;Dordogne;24
+Nouvelle-Aquitaine;Gironde;33
+Nouvelle-Aquitaine;Landes;40
+Nouvelle-Aquitaine;Lot-et-Garonne;47
+Nouvelle-Aquitaine;Pyrénées-Atlantiques;64
+Nouvelle-Aquitaine;Deux-Sèvres;79
+Nouvelle-Aquitaine;Vienne;86
+Nouvelle-Aquitaine;Haute-Vienne;87
+Occitanie;Ariège;9
+Occitanie;Aude;11
+Occitanie;Aveyron;12
+Occitanie;Gard;30
+Occitanie;Haute-Garonne;31
+Occitanie;Gers;32
+Occitanie;Hérault;34
+Occitanie;Lot;46
+Occitanie;Lozère;48
+Occitanie;Hautes-Pyrénées;65
+Occitanie;Pyrénées-Orientales;66
+Occitanie;Tarn;81
+Occitanie;Tarn-et-Garonne;82
+Pays de la Loire;Loire-Atlantique;44
+Pays de la Loire;Maine-et-Loire;49
+Pays de la Loire;Mayenne;53
+Pays de la Loire;Sarthe;72
+Pays de la Loire;Vendée;85
+Provence-Alpes-Côte d'Azur;Alpes-de-Haute-Provence;4
+Provence-Alpes-Côte d'Azur;Hautes-Alpes;5
+Provence-Alpes-Côte d'Azur;Alpes-Maritimes;6
+Provence-Alpes-Côte d'Azur;Bouches-du-Rhône;13
+Provence-Alpes-Côte d'Azur;Var;83
+Provence-Alpes-Côte d'Azur;Vaucluse;84
