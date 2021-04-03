@@ -21,7 +21,7 @@ NUMÉRO;NOM;REGION;CHEF LIEU;SUPERFICIE (km²);POPULATION;DENSITE (habitants/km2
 2A;Corse-du-Sud;Corse;Ajaccio;4014;152730;38
 2B;Haute-Corse;Corse;Bastia;4666;174553;37.4
 21;Côte-d'Or;Bourgogne-Franche-Comté;Dijon;8763;533147;60.8
-22;Côtes d'Armor;Bretagne;Saint-Brieuc;6878;598357;87
+22;Côtes-d'Armor;Bretagne;Saint-Brieuc;6878;598357;87
 23;Creuse;Nouvelle-Aquitaine;Guéret;5565;120365;21.6
 24;Dordogne;Nouvelle-Aquitaine;Périgueux;9060;415417;45.9
 25;Doubs;Bourgogne-Franche-Comté;Besançon;5233;536959;102.6
@@ -84,7 +84,7 @@ NUMÉRO;NOM;REGION;CHEF LIEU;SUPERFICIE (km²);POPULATION;DENSITE (habitants/km2
 82;Tarn-et-Garonne;Occitanie;Montauban;3718;255274;68.7
 83;Var;Provence-Alpes-Côte d'Azur;Toulon;5973;1048652;175.6
 84;Vaucluse;Provence-Alpes-Côte d'Azur;Avignon;3567;557548;156.3
-85;Vandée;Pays de la Loire;La Roche-sur-Yon;6720;666714;99.2
+85;Vendée;Pays de la Loire;La Roche-sur-Yon;6720;666714;99.2
 86;Vienne;Nouvelle-Aquitaine;Poitiers;6990;434887;62.2
 87;Haute-Vienne;Nouvelle-Aquitaine;Limoges;5520;375795;68.1
 88;Vosges;Grand Est;Épinal;5874;372016;63.3
