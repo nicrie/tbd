@@ -155,6 +155,7 @@ cams.columns
 covid = covid.rename(columns = {'date':'time'})
 covid = covid.merge(cams, how='inner', on=['time','dep_num'])
 
+# Compute the engineered features: 7 trailing day averages of gas' concentrations
 df = covid
 df["time"]=pd.to_datetime(df["time"])
 print (df)
@@ -271,7 +272,34 @@ df["o37davg"]=avgo3df["o37davg"]
 df["pm107davg"]=avgpm10df["pm107davg"]
 df["co7davg"]=avgcodf["co7davg"]
 print(df)
+
 df.to_csv("Enriched_Covid_history_data.csv", index = False)
 
+# Get Mobility indices historcial data and merge it by time & region with the rest of the data
+#  and export it to the Enriched_Covid_history_data.csv 
+df = pd.read_csv("mouvement-range-FRA-final.csv", sep = ';')
+df2 = pd.read_csv("Enriched_Covid_history_data.csv", sep = ",")
+df2 = df2.dropna()
+
+df3 = pd.read_csv("regions_departements.csv", sep = ";")
+
+mdlist = []
+
+df.reset_index(inplace=  True)
+df2.reset_index(inplace = True)
+df3.reset_index(inplace = True)
+df.drop(columns = ["index"],inplace = True)
+df2.drop(columns = ["index"],inplace = True)
+df3.drop(columns = ["index"],inplace = True)
+df["ds"]=pd.to_datetime(df["ds"])
+df2["time"]=pd.to_datetime(df2["time"])
+print(df)
+print(df2)
+print(df3)
+df3['depnum'] = df3['depnum'].replace({'2A':'201','2B':'202'}).astype(int)
+df2 = df2.merge(df3,left_on = "numero", right_on = "depnum")
+df2 = df2.merge(df, left_on = ["time","Region"], right_on = ["ds","polygon_name"])
+df2.to_csv("Enriched_Covid_history_data.csv", index = False)
+print(df2)
 
 print('OK')

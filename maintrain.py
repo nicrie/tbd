@@ -36,10 +36,15 @@ def mse(ground_truth, predictions):
 
 df = pd.read_csv("Enriched_Covid_history_data.csv")
 df = df.dropna()
+df["all_day_bing_tiles_visited_relative_change"]=df["all_day_bing_tiles_visited_relative_change"].astype(float)
+df["all_day_ratio_single_tile_users"]=df["all_day_ratio_single_tile_users"].astype(float)
 print(df)
 
 X1=df[['idx', 'pm25', 'no2']]
-X2=df[['idx', 'pm25', 'no2','o3','pm10','co','pm257davg','no27davg','o37davg','co7davg','pm107davg', 'hospiprevday']]
+X2=df[['idx', 'pm25', 'no2','o3','pm10','co',\
+    'pm257davg','no27davg','o37davg','co7davg', 'pm107davg',\
+        'hospiprevday',\
+            'all_day_bing_tiles_visited_relative_change','all_day_ratio_single_tile_users']]
 
 y= df['newhospi']
 
@@ -147,7 +152,7 @@ print('OK')
 
 
 print("TPOTRegressor")
-tpot = TPOTRegressor(generations=20, population_size=50, verbosity=2, random_state=42)
+tpot = TPOTRegressor(generations=50, population_size=50, verbosity=2, random_state=42)
 tpot.fit(X_train2, y_train2)
 print(tpot.score(X_test2, y_test2))
 tpot.export('tpot_covid_pipeline.py')
