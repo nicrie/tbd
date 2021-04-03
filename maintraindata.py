@@ -79,6 +79,7 @@ cams = cams.sortby('longitude')
 
 # CAMS is hourly ==> take daily means
 cams = cams.resample({'time':'D'}).mean()
+print(cams)
 # there seems to be a pretty annoying issue with dask.array
 # somehow I cannot manage to convert the dask.array to
 # a standard xarray.DataArray; unfortunately, xarray.interp()
@@ -105,8 +106,35 @@ no2 = xr.DataArray(
         'longitude':cams.coords['longitude'].values
     }
 )
+co = xr.DataArray(
+    cams.co_conc.values,
+    dims=['time','latitude','longitude'],
+    coords = {
+        'time':dates.to_period('d').unique(),
+        'latitude':cams.coords['latitude'].values,
+        'longitude':cams.coords['longitude'].values
+    }
+)
+o3 = xr.DataArray(
+    cams.o3_conc.values,
+    dims=['time','latitude','longitude'],
+    coords = {
+        'time':dates.to_period('d').unique(),
+        'latitude':cams.coords['latitude'].values,
+        'longitude':cams.coords['longitude'].values
+    }
+)
+pm10 = xr.DataArray(
+    cams.pm10_conc.values,
+    dims=['time','latitude','longitude'],
+    coords = {
+        'time':dates.to_period('d').unique(),
+        'latitude':cams.coords['latitude'].values,
+        'longitude':cams.coords['longitude'].values
+    }
+)
 # recreate Dataset (without dask)
-cams = xr.Dataset({'pm25': pm25, 'no2':no2})
+cams = xr.Dataset({'pm25': pm25, 'no2': no2, 'o3': o3, 'co':co, 'pm10':pm10})
 # interpolate CAMS data to lon/lat of departments
 lons = xr.DataArray(
     population['lon'],
@@ -133,6 +161,9 @@ print (df)
 print (df.columns)
 avgpm25 = []
 avgno2 = []
+avgo3 = []
+avgco = []
+avgpm10 = []
 for i in df.index:
     date0 = df.loc[i,"time"]
     depnum = df.loc[i,"numero"]
@@ -162,6 +193,24 @@ for i in df.index:
                                + day3data["no2"]\
                                + day4data["no2"]\
                                + day5data["no2"])/7)
+    avgO3 = ((day0data["o3"] + day1data["o3"]\
+                               + day1data["o3"]\
+                               + day2data["o3"]\
+                               + day3data["o3"]\
+                               + day4data["o3"]\
+                               + day5data["o3"])/7)
+    avgCO = ((day0data["co"] + day1data["co"]\
+                               + day1data["co"]\
+                               + day2data["co"]\
+                               + day3data["co"]\
+                               + day4data["co"]\
+                               + day5data["co"])/7)
+    avgPM10 = ((day0data["pm10"] + day1data["pm10"]\
+                               + day1data["pm10"]\
+                               + day2data["pm10"]\
+                               + day3data["pm10"]\
+                               + day4data["pm10"]\
+                               + day5data["pm10"])/7)
     if list(avgPM25)==[]: 
         avgpm25.append("NaN") 
     else:
@@ -170,7 +219,24 @@ for i in df.index:
     if list(avgNO2)==[]: 
         avgno2.append("NaN") 
     else:
-        avgno2.append(list(avgPM25)[0])
+        avgno2.append(list(avgNO2)[0])
+    
+    if list(avgO3)==[]: 
+        avgo3.append("NaN") 
+    else:
+        avgo3.append(list(avgO3)[0])
+    
+    if list(avgPM10)==[]: 
+        avgpm10.append("NaN") 
+    else:
+        avgpm10.append(list(avgPM10)[0])
+    
+    if list(avgCO)==[]: 
+        avgco.append("NaN") 
+    else:
+        avgco.append(list(avgCO)[0])
+
+
 
 
 avgpm25df = pd.DataFrame(avgpm25)
@@ -179,9 +245,20 @@ avgpm25df.columns=["pm257davg"]
 avgno2df = pd.DataFrame(avgno2)
 avgno2df.columns=["no27davg"]
 
+avgo3df = pd.DataFrame(avgo3)
+avgo3df.columns=["o37davg"]
+
+avgpm10df = pd.DataFrame(avgpm10)
+avgpm10df.columns=["pm107davg"]
+
+avgcodf = pd.DataFrame(avgco)
+avgcodf.columns=["co7davg"]
+
 df["pm257davg"]=avgpm25df["pm257davg"]
 df["no27davg"]=avgno2df["no27davg"]
-
+df["o37davg"]=avgo3df["o37davg"]
+df["pm107davg"]=avgpm10df["pm107davg"]
+df["co7davg"]=avgcodf["co7davg"]
 print(df)
 df.to_csv("Enriched_Covid_history_data.csv", index = False)
 
