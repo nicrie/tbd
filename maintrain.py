@@ -43,7 +43,7 @@ print(df)
 X1=df[['idx', 'pm25', 'no2']]
 X2=df[['idx', 'pm25', 'no2','o3','pm10','co',\
     'pm257davg','no27davg','o37davg','co7davg', 'pm107davg',\
-        'hospiprevday',\
+        'hospiprevday','covidpostestprevday',\
             'all_day_bing_tiles_visited_relative_change','all_day_ratio_single_tile_users']]
 
 y= df['newhospi']
